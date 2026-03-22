@@ -96,8 +96,8 @@ Once connected, messages from WeChat appear in Claude Code. Claude's replies are
 
 | Direction | Text | Image | Video | File | Voice |
 |-----------|------|-------|-------|------|-------|
-| Receive   | ✓    | ✓     | ✓     | ✓    | ✓     |
-| Send      | ✓    | ✓     | ✓     | ✓    | ✓     |
+| Receive   | ✓    | ✓     | —     | ✓    | ✓     |
+| Send      | ✓    | ✓     | —     | ✓    | ✓     |
 
 ### Skills Commands
 
