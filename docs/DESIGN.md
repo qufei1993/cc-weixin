@@ -1,18 +1,26 @@
-# cc-weixin 实现计划
+# cc-weixin 架构设计
 
-> 开源微信 Channel 插件 — 通过微信官方 iLink Bot API 将微信接入 Claude Code
+> **C**ode **C**hannel — **W**ei**x**in（微信）
+>
+> 通过微信官方 iLink Bot API，将微信连接到 AI 编程工具。当前支持 Claude Code，后续计划支持 Codex 等更多平台。
 
 ## 背景
 
-微信官方发布了 ClawBot（`@tencent-weixin/openclaw-weixin`），提供了完整的微信 iLink Bot API 协议。Claude Code 已支持 Channel 功能（Telegram/Discord），架构为 MCP Server。本项目基于微信 iLink Bot API 协议文档（见 `docs/API-REFERENCE.md`），从零实现一个微信 Channel 插件。
+微信官方发布了 ClawBot（`@tencent-weixin/openclaw-weixin`），提供了完整的微信 iLink Bot API 协议。本项目基于该协议文档（见 `docs/API-REFERENCE.md`），从零实现一个微信 Channel 插件，可对接不同的 AI 编程工具。
 
 ### 核心原则
 
 - **官方合规**：使用微信官方 iLink Bot API（`ilinkai.weixin.qq.com`），非逆向工程
-- **规范一致**：遵循 Claude Code 官方插件规范（参照 Telegram 插件结构）
-- **代码独立**：基于 API 文档自主实现，不复制上游代码，零维护负担
 - **平台解耦**：微信通信层与平台适配层分离，通过回调模式对接不同 AI 编程工具
-- **开源友好**：MIT 许可证、中英双语文档
+- **代码独立**：基于 API 文档自主实现，不复制上游代码，零维护负担
+- **开源友好**：MIT 许可证
+
+### 平台支持计划
+
+| 平台 | 状态 | 适配层 |
+|------|------|--------|
+| Claude Code | ✅ 已支持 | `server.ts`（MCP Channel） |
+| Codex (OpenAI) | 🔜 计划中 | 待 Codex 支持 Channel 机制后实现 |
 
 ### 架构
 

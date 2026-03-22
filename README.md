@@ -1,6 +1,8 @@
-# Claude Code 微信 Channel 插件
+# cc-weixin
 
-通过微信官方 iLink Bot API 将微信连接到 Claude Code。
+> **C**ode **C**hannel — **W**ei**x**in（微信）
+
+通过微信官方 iLink Bot API，将微信连接到 AI 编程工具。当前支持 Claude Code，后续计划支持 Codex 等更多平台。
 
 ## 特性
 
@@ -8,6 +10,14 @@
 - **完整媒体支持**：收发图片、视频、语音消息和文件
 - **访问控制**：配对码 + 白名单，防止未授权访问
 - **本地安全**：MCP Server 通过 stdio 本地运行，无暴露端口
+- **平台解耦**：微信通信层与平台适配层分离，便于扩展到更多 AI 编程工具
+
+## 支持平台
+
+| 平台 | 状态 |
+|------|------|
+| Claude Code | ✅ 已支持 |
+| Codex (OpenAI) | 🔜 计划中 |
 
 ## 前置要求
 
@@ -98,9 +108,11 @@ claude --dangerously-load-development-channels server:weixin
 ```
 微信用户 ──DM──→ 微信服务器 (ilinkai.weixin.qq.com)
                        ↑ 长轮询 getUpdates
-                 MCP Server (server.ts)
-                       ↓ notifications/claude/channel
-                  Claude Code Session (stdio)
+              微信通信层 (src/)          ← 平台无关，可复用
+                       ↓ onMessage 回调
+              平台适配层 (server.ts)     ← Claude Code / Codex / ...
+                       ↓ notifications/channel
+              AI 编程工具 Session (stdio)
 ```
 
 ## 安全设计
