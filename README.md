@@ -60,13 +60,11 @@ cd cc-weixin
 
 ### 2. 启动 Claude Code 并启用微信 channel
 
-`/weixin:configure` 连接成功后会自动在当前项目目录注册 `.mcp.json`，之后从**同一目录**启动：
+`/weixin:configure` 连接成功后会自动注册全局 MCP 服务器，之后在任意目录启动：
 
 ```bash
 claude --dangerously-load-development-channels server:weixin
 ```
-
-如需在其他项目中使用，进入该项目目录后再次运行 `/weixin:configure` 即可注册。
 
 > **注意**：`--channels plugin:weixin@cc-weixin` 需要官方 allowlist 批准，目前尚未开放，请使用上述方式启动。
 

@@ -5,10 +5,11 @@
 
 import { startLogin, waitForLogin } from "./login.js";
 import { loadAccount, saveAccount, clearAccount, DEFAULT_BASE_URL } from "./accounts.js";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { homedir } from "node:os";
 import { readdirSync } from "node:fs";
+import { execSync } from "node:child_process";
 
 const arg = process.argv[2];
 
@@ -35,32 +36,29 @@ function resolvePluginDir(): string {
 }
 
 /**
- * Register weixin MCP server in the project's .mcp.json.
- * `server:weixin` only checks the current directory's .mcp.json,
- * so this must be called from the user's working directory via the skill.
+ * Register weixin MCP server globally using `claude mcp add --scope user`.
+ * This makes `server:weixin` available from any directory.
  */
 function registerMcpServer(): void {
   const pluginDir = resolvePluginDir();
+  const cmd = `cd "${pluginDir}" && exec bun server.ts`;
 
-  // Write to current working directory's .mcp.json (for server:weixin channel)
-  const projectMcpFile = join(process.cwd(), ".mcp.json");
-  let projectConfig: { mcpServers: Record<string, unknown> } = { mcpServers: {} };
-
-  if (existsSync(projectMcpFile)) {
+  try {
+    // Remove existing first (ignore errors if not exists)
     try {
-      projectConfig = JSON.parse(readFileSync(projectMcpFile, "utf-8"));
-      projectConfig.mcpServers = projectConfig.mcpServers || {};
+      execSync("claude mcp remove weixin --scope user", { stdio: "ignore" });
     } catch {}
+
+    execSync(`claude mcp add weixin --scope user -- bash -c '${cmd}'`, {
+      stdio: "inherit",
+    });
+    console.log(`\nMCP server registered globally (user scope)`);
+    console.log(`  Plugin directory: ${pluginDir}`);
+  } catch (err) {
+    console.error(`\nFailed to register MCP server: ${err}`);
+    console.log("You can manually register with:");
+    console.log(`  claude mcp add weixin --scope user -- bash -c '${cmd}'`);
   }
-
-  projectConfig.mcpServers.weixin = {
-    command: "bash",
-    args: ["-c", `cd "${pluginDir}" && exec bun server.ts`],
-  };
-
-  writeFileSync(projectMcpFile, JSON.stringify(projectConfig, null, 2), "utf-8");
-  console.log(`\nMCP server registered: ${projectMcpFile}`);
-  console.log(`  Plugin directory: ${pluginDir}`);
 }
 
 // Check existing account

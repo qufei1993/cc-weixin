@@ -26,13 +26,11 @@ Otherwise, run `bun src/cli-login.ts` and wait for the script to complete.
 
 The script handles everything: checking existing accounts, displaying the QR code, polling for scan result, and saving credentials.
 
-The script automatically registers the weixin MCP server in the current project's `.mcp.json` file. This is required for `server:weixin` channel to work.
+The script automatically registers the weixin MCP server globally using `claude mcp add --scope user`, so `server:weixin` works from any directory.
 
-After connecting, tell the user to restart Claude Code **from the same directory** with:
+After connecting, tell the user to restart Claude Code with:
 ```
 claude --dangerously-load-development-channels server:weixin
 ```
-
-If the user wants to use weixin channel in a different project, they need to run `/weixin:configure` again from that project directory to register the MCP server there.
 
 **Do NOT mention** `claude --channels plugin:weixin@cc-weixin` — this requires an official allowlist and is not yet available.
