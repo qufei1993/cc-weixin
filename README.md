@@ -103,6 +103,21 @@ claude --dangerously-load-development-channels server:weixin
 | `/weixin:configure clear` | 断开微信账号 |
 | `/weixin:access` | 管理访问控制 |
 
+## 卸载
+
+```
+/weixin:configure clear
+/plugin uninstall weixin@cc-weixin
+/plugin marketplace remove cc-weixin
+```
+
+清理全局 MCP 注册和缓存：
+
+```bash
+claude mcp remove weixin --scope user
+rm -rf ~/.claude/plugins/cache/cc-weixin
+```
+
 ## 架构
 
 ```
