@@ -9,6 +9,8 @@
   <img src="docs/assets/claude-code-terminal.png" width="500" alt="Claude Code 终端" />
 </p>
 
+**👉 [新手图文教程：如何用微信连接 Claude Code](https://mp.weixin.qq.com/s/745V4wfyihsm6irqT0PABQ)**
+
 ## 特性
 
 - **官方 API**：使用微信 iLink Bot API，非逆向工程
@@ -30,7 +32,7 @@
 - [Claude Code](https://claude.ai/code)（需支持 channel 功能）
 - 微信账号
   - iOS：微信 8.0.70 或更高版本，路径：**我 → 设置 → 插件 → ClawBot（如果支持了，能看到这个插件）**
-  - Android：暂未支持，等微信官方支持
+  - Android：微信 8.0.70 或更高版本
   - 该插件目前仍在灰度测试阶段，部分用户可能暂时无法开通
 
 ## 安装
