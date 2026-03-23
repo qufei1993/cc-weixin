@@ -4,7 +4,10 @@
   "description": "WeChat channel plugin for Claude Code via official iLink Bot API",
   "license": "MIT",
   "type": "module",
-  "bin": "./server.ts",
+  "bin": {
+    "server": "./server.ts",
+    "codex-bridge": "./codex-bridge.ts"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/qufei1993/cc-weixin.git",

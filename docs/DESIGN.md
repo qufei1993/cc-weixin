@@ -20,7 +20,7 @@
 | 平台 | 状态 | 适配层 |
 |------|------|--------|
 | Claude Code | ✅ 已支持 | `server.ts`（MCP Channel） |
-| Codex (OpenAI) | 🔜 计划中 | 待 Codex 支持 Channel 机制后实现 |
+| Codex (OpenAI) | ⏸️ 暂不支持 | TUI 无法显示外部对话，详见 `docs/CODEX-RESEARCH.md` |
 
 ### 架构
 
