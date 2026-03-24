@@ -115,6 +115,28 @@ claude --dangerously-load-development-channels server:weixin
 | `/weixin:configure clear` | 断开微信账号 |
 | `/weixin:access` | 管理访问控制 |
 
+## 升级
+
+当插件有新版本发布时，在 Claude Code 中执行：
+
+```
+/plugin update weixin@cc-weixin
+```
+
+如果更新后仍使用旧版本，可以清除缓存后重新安装：
+
+```bash
+rm -rf ~/.claude/plugins/cache/cc-weixin
+```
+
+然后在 Claude Code 中重新安装：
+
+```
+/plugin install weixin@cc-weixin
+```
+
+版本变更记录详见 [CHANGELOG.md](CHANGELOG.md)。
+
 ## 卸载
 
 ```

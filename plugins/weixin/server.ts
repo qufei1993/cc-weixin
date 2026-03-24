@@ -20,7 +20,7 @@ import { getConfig, sendTyping } from "./src/api.js";
 import { TypingStatus } from "./src/types.js";
 
 const server = new Server(
-  { name: "weixin", version: "0.1.0" },
+  { name: "weixin", version: "0.1.1" },
   {
     capabilities: {
       experimental: { "claude/channel": {} },
@@ -191,8 +191,29 @@ async function main() {
   const controller = new AbortController();
 
   // Graceful shutdown
-  process.on("SIGINT", () => controller.abort());
-  process.on("SIGTERM", () => controller.abort());
+  const shutdown = () => {
+    if (!controller.signal.aborted) {
+      process.stderr.write("[weixin] Shutting down...\n");
+      controller.abort();
+    }
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+  process.on("SIGHUP", shutdown);
+
+  // Periodically check if parent process is still alive
+  const ppid = process.ppid;
+  const parentCheck = setInterval(() => {
+    try {
+      process.kill(ppid, 0); // signal 0 = check existence, no actual signal sent
+    } catch {
+      // Parent process is gone — we're orphaned
+      process.stderr.write("[weixin] Parent process exited, shutting down...\n");
+      clearInterval(parentCheck);
+      shutdown();
+    }
+  }, 5000);
 
   await startPollLoop({
     baseUrl,
@@ -215,6 +236,10 @@ async function main() {
     },
     abortSignal: controller.signal,
   });
+
+  // Poll loop ended — close server and exit
+  await server.close();
+  process.exit(0);
 }
 
 main().catch((err) => {
