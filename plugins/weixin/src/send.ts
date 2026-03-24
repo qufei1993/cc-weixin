@@ -97,6 +97,7 @@ export async function sendMediaFile(params: {
   const cdnMedia: CDNMedia = {
     encrypt_query_param: uploaded.encryptQueryParam,
     aes_key: uploaded.aesKey,
+    encrypt_type: 1,
   };
 
   // Build item list
@@ -115,19 +116,19 @@ export async function sendMediaFile(params: {
     case 1: // IMAGE
       items.push({
         type: MessageItemType.IMAGE,
-        image_item: { media: cdnMedia },
+        image_item: { media: cdnMedia, mid_size: uploaded.fileSize },
       });
       break;
     case 2: // VIDEO
       items.push({
         type: MessageItemType.VIDEO,
-        video_item: { media: cdnMedia, video_size: uploaded.rawSize },
+        video_item: { media: cdnMedia, video_size: uploaded.fileSize },
       });
       break;
     default: // FILE
       items.push({
         type: MessageItemType.FILE,
-        file_item: { media: cdnMedia, file_name: uploaded.fileName },
+        file_item: { media: cdnMedia, file_name: uploaded.fileName, len: String(uploaded.rawSize) },
       });
       break;
   }
