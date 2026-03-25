@@ -1,7 +1,7 @@
 {
   "name": "weixin",
   "description": "WeChat (微信) channel for Claude Code — connect WeChat to Claude Code via official iLink Bot API",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "keywords": ["weixin", "wechat", "messaging", "channel", "mcp"],
   "license": "MIT"
 }

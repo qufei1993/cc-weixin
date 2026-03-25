@@ -141,7 +141,7 @@ export async function uploadFile(params: {
 
   return {
     encryptQueryParam,
-    aesKey: aesKey.toString("base64"),
+    aesKey: Buffer.from(aesKey.toString("hex")).toString("base64"),
     fileSize,
     rawSize,
     fileName: basename(filePath),

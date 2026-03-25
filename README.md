@@ -72,13 +72,13 @@ cd cc-weixin
 
 ### 2. 启动 Claude Code 并启用微信 channel
 
-`/weixin:configure` 连接成功后会自动注册全局 MCP 服务器，之后在任意目录启动：
+`/weixin:configure` 连接成功后，在任意目录启动：
 
 ```bash
-claude --dangerously-load-development-channels server:weixin
+claude --dangerously-load-development-channels plugin:weixin@cc-weixin
 ```
 
-> **注意**：`--channels plugin:weixin@cc-weixin` 需要官方 allowlist 批准，目前尚未开放，请使用上述方式启动。
+> **注意**：`--channels plugin:weixin@cc-weixin`（不带 `--dangerously-load-development-channels`）需要官方 allowlist 批准，目前尚未开放，请使用上述方式启动。
 
 ### 3. 配对微信用户
 
@@ -114,6 +114,28 @@ claude --dangerously-load-development-channels server:weixin
 | `/weixin:configure` | 连接微信账号（扫码登录） |
 | `/weixin:configure clear` | 断开微信账号 |
 | `/weixin:access` | 管理访问控制 |
+
+## 升级
+
+当插件有新版本发布时，在 Claude Code 中执行：
+
+```
+/plugin update weixin@cc-weixin
+```
+
+如果更新后仍使用旧版本，可以清除缓存后重新安装：
+
+```bash
+rm -rf ~/.claude/plugins/cache/cc-weixin
+```
+
+然后在 Claude Code 中重新安装：
+
+```
+/plugin install weixin@cc-weixin
+```
+
+版本变更记录详见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 卸载
 

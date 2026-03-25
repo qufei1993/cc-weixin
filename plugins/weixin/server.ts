@@ -13,14 +13,16 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { existsSync } from "node:fs";
 
-import { loadAccount, DEFAULT_BASE_URL, CDN_BASE_URL } from "./src/accounts.js";
+import { loadAccount, DEFAULT_BASE_URL, CDN_BASE_URL, getChannelName } from "./src/accounts.js";
 import { startPollLoop, getContextToken, type ParsedMessage } from "./src/monitor.js";
 import { sendText, sendMediaFile } from "./src/send.js";
 import { getConfig, sendTyping } from "./src/api.js";
 import { TypingStatus } from "./src/types.js";
 
+const channelName = getChannelName();
+
 const server = new Server(
-  { name: "weixin", version: "0.1.0" },
+  { name: channelName, version: "0.1.2" },
   {
     capabilities: {
       experimental: { "claude/channel": {} },
@@ -178,7 +180,7 @@ async function main() {
   const account = loadAccount();
   if (!account) {
     process.stderr.write(
-      "[weixin] No account configured. Run /weixin:configure to connect your WeChat account.\n",
+      `[${channelName}] No account configured. Run /weixin:configure to connect your WeChat account.\n`,
     );
     return;
   }
@@ -186,13 +188,34 @@ async function main() {
   const baseUrl = account.baseUrl || DEFAULT_BASE_URL;
   const cdnBaseUrl = CDN_BASE_URL;
 
-  process.stderr.write("[weixin] Account loaded, starting poll loop...\n");
+  process.stderr.write(`[${channelName}] Account loaded, starting poll loop...\n`);
 
   const controller = new AbortController();
 
   // Graceful shutdown
-  process.on("SIGINT", () => controller.abort());
-  process.on("SIGTERM", () => controller.abort());
+  const shutdown = () => {
+    if (!controller.signal.aborted) {
+      process.stderr.write(`[${channelName}] Shutting down...\n`);
+      controller.abort();
+    }
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+  process.on("SIGHUP", shutdown);
+
+  // Periodically check if parent process is still alive
+  const ppid = process.ppid;
+  const parentCheck = setInterval(() => {
+    try {
+      process.kill(ppid, 0); // signal 0 = check existence, no actual signal sent
+    } catch {
+      // Parent process is gone — we're orphaned
+      process.stderr.write(`[${channelName}] Parent process exited, shutting down...\n`);
+      clearInterval(parentCheck);
+      shutdown();
+    }
+  }, 5000);
 
   await startPollLoop({
     baseUrl,
@@ -215,9 +238,13 @@ async function main() {
     },
     abortSignal: controller.signal,
   });
+
+  // Poll loop ended — close server and exit
+  await server.close();
+  process.exit(0);
 }
 
 main().catch((err) => {
-  process.stderr.write(`[weixin] Fatal error: ${err}\n`);
+  process.stderr.write(`[${channelName}] Fatal error: ${err}\n`);
   process.exit(1);
 });

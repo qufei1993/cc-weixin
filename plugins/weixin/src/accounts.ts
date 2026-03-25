@@ -17,8 +17,13 @@ export interface AccountData {
   savedAt: string;
 }
 
+export function getChannelName(): string {
+  const wx = process.env.WX;
+  return wx ? `weixin-${wx}` : "weixin";
+}
+
 export function getStateDir(): string {
-  const dir = process.env.WEIXIN_STATE_DIR || join(homedir(), ".claude", "channels", "weixin");
+  const dir = process.env.WEIXIN_STATE_DIR || join(homedir(), ".claude", "channels", getChannelName());
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }

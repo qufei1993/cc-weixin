@@ -70,6 +70,34 @@ export async function sendText(params: {
   return { messageId: clientId };
 }
 
+/**
+ * Send each item as a separate sendMessage request.
+ * WeChat requires each item_list to contain exactly one entry.
+ */
+async function sendItems(params: {
+  items: MessageItem[];
+  to: string;
+  baseUrl: string;
+  token: string;
+  contextToken: string;
+}): Promise<string> {
+  const { items, to, baseUrl, token, contextToken } = params;
+  let lastClientId = "";
+  for (const item of items) {
+    lastClientId = randomUUID();
+    await sendMessage(baseUrl, token, {
+      to_user_id: to,
+      from_user_id: "",
+      client_id: lastClientId,
+      message_type: MessageType.BOT,
+      message_state: MessageState.FINISH,
+      context_token: contextToken,
+      item_list: [item],
+    });
+  }
+  return lastClientId;
+}
+
 /** Send a media file */
 export async function sendMediaFile(params: {
   filePath: string;
@@ -81,7 +109,6 @@ export async function sendMediaFile(params: {
   cdnBaseUrl: string;
 }): Promise<{ messageId: string }> {
   const { filePath, to, text, baseUrl, token, contextToken, cdnBaseUrl } = params;
-  const clientId = randomUUID();
   const mediaType = guessMediaType(filePath);
 
   // Upload file to CDN
@@ -97,9 +124,10 @@ export async function sendMediaFile(params: {
   const cdnMedia: CDNMedia = {
     encrypt_query_param: uploaded.encryptQueryParam,
     aes_key: uploaded.aesKey,
+    encrypt_type: 1,
   };
 
-  // Build item list
+  // Build items — each will be sent as a separate request
   const items: MessageItem[] = [];
 
   // Add text if present
@@ -115,32 +143,23 @@ export async function sendMediaFile(params: {
     case 1: // IMAGE
       items.push({
         type: MessageItemType.IMAGE,
-        image_item: { media: cdnMedia },
+        image_item: { media: cdnMedia, mid_size: uploaded.fileSize },
       });
       break;
     case 2: // VIDEO
       items.push({
         type: MessageItemType.VIDEO,
-        video_item: { media: cdnMedia, video_size: uploaded.rawSize },
+        video_item: { media: cdnMedia, video_size: uploaded.fileSize },
       });
       break;
     default: // FILE
       items.push({
         type: MessageItemType.FILE,
-        file_item: { media: cdnMedia, file_name: uploaded.fileName },
+        file_item: { media: cdnMedia, file_name: uploaded.fileName, len: String(uploaded.rawSize) },
       });
       break;
   }
 
-  await sendMessage(baseUrl, token, {
-    to_user_id: to,
-    from_user_id: "",
-    client_id: clientId,
-    message_type: MessageType.BOT,
-    message_state: MessageState.FINISH,
-    context_token: contextToken,
-    item_list: items,
-  });
-
-  return { messageId: clientId };
+  const messageId = await sendItems({ items, to, baseUrl, token, contextToken });
+  return { messageId };
 }
