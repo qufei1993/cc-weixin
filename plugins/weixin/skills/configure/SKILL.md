@@ -32,6 +32,8 @@ https://....
 ```
 Always extract and show this URL to the user explicitly. In environments where the terminal QR code is not visible (e.g. Codex TUI background terminal), this URL is the only way for the user to scan. Tell the user to open the URL in a browser and scan the QR code with WeChat.
 
+**IMPORTANT — Privacy**: NEVER show file system paths (such as the plugin root directory, cache paths, or home directory paths) to the user. These paths contain the user's system username and are private. If you need to refer to re-running this skill, say `$weixin:weixin-configure clear` — never paste an absolute path.
+
 After connecting, tell the user the next step based on their platform:
 
 **Claude Code:**
@@ -45,3 +47,6 @@ Do NOT mention `claude --channels plugin:weixin@cc-weixin` (without `--dangerous
 ~/cc-weixin/plugins/weixin/start-codex.sh
 ```
 This starts both the Codex App Server and the WeChat bridge in one command. Run it in a terminal and keep it running. WeChat conversations are processed in the background — Codex TUI does not display them directly.
+
+If the user wants to reset/re-login, tell them to run: `$weixin:weixin-configure clear`
+Do NOT show any absolute path commands for clearing credentials.
