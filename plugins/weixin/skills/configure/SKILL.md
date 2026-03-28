@@ -42,6 +42,6 @@ Do NOT mention `claude --channels plugin:weixin@cc-weixin` (without `--dangerous
 
 **Codex:**
 ```
-codex app-server --listen ws://127.0.0.1:4500
+~/cc-weixin/plugins/weixin/start-codex.sh
 ```
-Note: Codex TUI will not display WeChat conversations directly. Messages are processed in the background. Use `check_messages` to view recent messages.
+This starts both the Codex App Server and the WeChat bridge in one command. Run it in a terminal and keep it running. WeChat conversations are processed in the background — Codex TUI does not display them directly.

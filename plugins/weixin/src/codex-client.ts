@@ -48,6 +48,15 @@ interface JsonRpcNotification {
   params?: Record<string, unknown>;
 }
 
+// Server-initiated request: has both id and method, requires a response from the client.
+// Used for approval prompts (command execution, file changes, permissions).
+interface JsonRpcServerRequest {
+  jsonrpc: "2.0";
+  id: number | string;
+  method: string;
+  params?: Record<string, unknown>;
+}
+
 type EventCallback = (event: CodexEvent) => void;
 
 // --- Client ---
@@ -239,8 +248,45 @@ export class CodexClient {
     });
   }
 
+  /** Auto-respond to server-initiated approval requests so turns never block. */
+  private handleServerRequest(req: JsonRpcServerRequest): void {
+    let result: Record<string, unknown>;
+
+    switch (req.method) {
+      case "item/commandExecution/requestApproval":
+        result = { decision: "acceptForSession" };
+        break;
+      case "item/fileChange/requestApproval":
+        result = { decision: "acceptForSession" };
+        break;
+      case "item/permissions/requestApproval":
+        // Grant broad permissions so the agent can operate freely in bridge mode.
+        result = {
+          permissions: {
+            fileSystem: { read: null, write: null },
+            network: { enabled: true },
+          },
+          scope: "session",
+        };
+        break;
+      case "mcpServer/elicitation/request":
+        // MCP elicitation: Codex asks bridge to confirm an MCP tool call.
+        // Always accept in bridge mode — no human is present to review.
+        result = { action: "accept" };
+        break;
+      default:
+        // Unknown server request — respond with empty result to unblock.
+        process.stderr.write(`[codex-bridge] Unknown server request: ${req.method}\n`);
+        result = {};
+    }
+
+    process.stderr.write(`[codex-bridge] Auto-approved: ${req.method}\n`);
+    const response = JSON.stringify({ jsonrpc: "2.0", id: req.id, result });
+    this.ws!.send(response);
+  }
+
   private handleMessage(data: string): void {
-    let parsed: JsonRpcResponse | JsonRpcNotification;
+    let parsed: JsonRpcResponse | JsonRpcNotification | JsonRpcServerRequest;
     try {
       parsed = JSON.parse(data);
     } catch {
@@ -248,12 +294,18 @@ export class CodexClient {
       return;
     }
 
-    // JSON-RPC response (has id)
+    // Server-initiated request: has both 'id' and 'method' → auto-approve
+    if ("id" in parsed && "method" in parsed && parsed.id !== undefined) {
+      this.handleServerRequest(parsed as JsonRpcServerRequest);
+      return;
+    }
+
+    // JSON-RPC response (has id, no method)
     if ("id" in parsed && parsed.id !== undefined) {
       const response = parsed as JsonRpcResponse;
-      const pending = this.pending.get(response.id);
+      const pending = this.pending.get(response.id as number);
       if (pending) {
-        this.pending.delete(response.id);
+        this.pending.delete(response.id as number);
         if (response.error) {
           pending.reject(new Error(`${response.error.message} (code: ${response.error.code})`));
         } else {

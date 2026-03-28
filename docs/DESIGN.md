@@ -90,7 +90,7 @@ cc-weixin/
 | 微信通信层 | `types.ts`, `api.ts`, `login.ts`, `media.ts`, `send.ts`, `accounts.ts`, `pairing.ts` | 微信 API 交互、CDN 媒体处理、凭证管理 | 通用 |
 | 消息轮询层 | `monitor.ts` | 长轮询 + 消息解析 + 访问控制，通过 `onMessage` 回调输出 | 通用 |
 | 平台适配层 | `server.ts` | MCP Server，将回调转为 `notifications/claude/channel` | Claude Code 专用 |
-| 平台适配层 | `server-codex.ts` | Standalone 桥接：轮询微信 → 注入 Codex App Server turn → 回复。Plugin 模式下自动降级为 passive（只提供工具） | Codex 专用（实验性） |
+| 平台适配层 | `server-codex.ts` | Standalone 桥接：轮询微信 → 注入 Codex App Server turn → 回复。Plugin 模式下仅提供 MCP 工具（reply/check_messages），不运行桥接 | Codex 专用（实验性） |
 
 ---
 

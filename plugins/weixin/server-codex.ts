@@ -324,15 +324,11 @@ async function main(): Promise<void> {
       process.exit(0);
     }
   } else {
-    // Plugin mode: must connect MCP server before lock check so Codex gets a valid MCP response
+    // Plugin mode: serve MCP tools only. The bridge runs via start-codex.sh (standalone mode).
+    // Do NOT run the poll loop or WebSocket bridge here — that would conflict with the standalone instance.
     const transport = new StdioServerTransport();
     await server.connect(transport);
-
-    // Single-instance lock: only one process runs the bridge
-    if (!acquireLock()) {
-      process.stderr.write("[weixin-codex] Running in passive mode (poll loop handled by primary instance).\n");
-      return;
-    }
+    return;
   }
 
   const account = loadAccount();
@@ -362,17 +358,6 @@ async function main(): Promise<void> {
 
   let threadId: string | null = null;
 
-  if (codex.isConnected) {
-    try {
-      await codex.initialize();
-      const thread = await codex.createThread();
-      threadId = thread.threadId;
-      process.stderr.write(`[weixin-codex] Thread created: ${threadId}\n`);
-    } catch (err) {
-      process.stderr.write(`[weixin-codex] App Server setup failed: ${err}\n`);
-    }
-  }
-
   // Track which WeChat user triggered the current turn
   let currentChatId: string | null = null;
 
@@ -389,9 +374,50 @@ async function main(): Promise<void> {
     }
   });
 
+  // Register event listener before createThread so we don't miss early events.
+  // Also logs turn lifecycle for diagnostics.
   codex.onEvent((event: CodexEvent) => {
+    const m = event.method;
+    if (m === "turn/started" || m === "turn/completed" || m === "thread/status/changed") {
+      process.stderr.write(`[weixin-codex] ${m}: ${JSON.stringify(event.params).slice(0, 120)}\n`);
+    }
     collector.handleEvent(event);
   });
+
+  if (codex.isConnected) {
+    // Wait for App Server to reach idle state before starting poll loop.
+    // Register idle-listener BEFORE createThread to avoid missing the event.
+    const readyPromise = new Promise<void>((resolve) => {
+      const timeout = setTimeout(() => {
+        process.stderr.write("[weixin-codex] App Server ready (timeout).\n");
+        resolve();
+      }, 30000);
+
+      const onReady = (event: CodexEvent) => {
+        if (
+          event.method === "thread/status/changed" &&
+          (event.params?.status as Record<string, unknown> | undefined)?.type === "idle"
+        ) {
+          clearTimeout(timeout);
+          codex.offEvent(onReady);
+          process.stderr.write("[weixin-codex] App Server ready.\n");
+          resolve();
+        }
+      };
+      codex.onEvent(onReady);
+    });
+
+    try {
+      await codex.initialize();
+      const thread = await codex.createThread();
+      threadId = thread.threadId;
+      process.stderr.write(`[weixin-codex] Thread created: ${threadId}\n`);
+    } catch (err) {
+      process.stderr.write(`[weixin-codex] App Server setup failed: ${err}\n`);
+    }
+
+    await readyPromise;
+  }
 
   // Graceful shutdown
   const controller = new AbortController();
@@ -450,27 +476,32 @@ async function main(): Promise<void> {
 
       currentChatId = msg.fromUserId;
 
-      let inputText = msg.text;
+      // Include sender's chat_id so the agent always knows who sent the message
+      // and can reply or send files back without having to look it up.
+      let inputText = `[WeChat message | chat_id: ${msg.fromUserId}]\n${msg.text}`;
       if (msg.attachmentPath) {
         inputText += `\n[Attachment (${msg.attachmentType || "file"}): ${msg.attachmentPath}]`;
       }
 
-      process.stderr.write(`[weixin-codex] ← ${msg.fromUserId}: ${inputText}\n`);
+      process.stderr.write(`[weixin-codex] ← ${msg.fromUserId}: ${msg.text}\n`);
 
       const input = [{ type: "text" as const, text: inputText }];
 
       try {
         if (codex.activeTurnId) {
+          process.stderr.write(`[weixin-codex] Steering active turn ${codex.activeTurnId}\n`);
           await codex.steerTurn({ threadId, input, expectedTurnId: codex.activeTurnId });
         } else {
-          await codex.startTurn({ threadId, input });
+          const { turnId } = await codex.startTurn({ threadId, input });
+          process.stderr.write(`[weixin-codex] Turn injected: ${turnId || "(no id)"}\n`);
         }
       } catch (err) {
         process.stderr.write(`[weixin-codex] Failed to inject message: ${err}\n`);
         // Retry with startTurn if steer failed
         if (codex.activeTurnId) {
           try {
-            await codex.startTurn({ threadId, input });
+            const { turnId } = await codex.startTurn({ threadId, input });
+            process.stderr.write(`[weixin-codex] Turn injected (retry): ${turnId || "(no id)"}\n`);
           } catch (retryErr) {
             process.stderr.write(`[weixin-codex] Retry also failed: ${retryErr}\n`);
           }

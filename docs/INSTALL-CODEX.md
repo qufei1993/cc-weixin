@@ -96,10 +96,19 @@ $weixin-configure
 [weixin] Starting Weixin bridge...
 [weixin-codex] Standalone bridge mode.
 [weixin-codex] Thread created: ...
+[weixin-codex] App Server ready.          ← 或 "App Server ready (timeout)."
 [weixin-codex] Starting WeChat poll loop...
+[weixin] Starting message poll loop...    ← ✅ 出现这行表示完全就绪
 ```
 
-看到 `Starting WeChat poll loop` 表示桥接已就绪，可以从微信发消息了。
+**等待这两行同时出现后，再从微信发消息：**
+
+```
+[weixin-codex] Starting WeChat poll loop...
+[weixin] Starting message poll loop...
+```
+
+这两行表示桥接和轮询均已建立，此后发来的微信消息才会被 AI 处理并回复。
 
 ### 第六步：配对微信用户
 
