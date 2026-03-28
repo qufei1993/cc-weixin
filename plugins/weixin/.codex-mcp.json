@@ -2,8 +2,11 @@
   "mcpServers": {
     "weixin": {
       "type": "stdio",
-      "command": "bun",
-      "args": ["/Users/may/Desktop/ai/claude/cc-weixin/plugins/weixin/server-codex.ts"],
+      "command": "sh",
+      "args": [
+        "-c",
+        "bun install --no-summary --cwd \"${CODEX_PLUGIN_ROOT:-.}\" 1>&2 && exec bun --cwd \"${CODEX_PLUGIN_ROOT:-.}\" server-codex.ts"
+      ],
       "env": {
         "CODEX_WS_URL": "ws://127.0.0.1:4500"
       }
