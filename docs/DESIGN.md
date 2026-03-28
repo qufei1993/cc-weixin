@@ -19,8 +19,8 @@
 
 | 平台 | 状态 | 适配层 |
 |------|------|--------|
-| Claude Code | ✅ 已支持 | `server.ts`（MCP Channel） |
-| Codex (OpenAI) | ⏸️ 暂不支持 | TUI 无法显示外部对话，详见 `docs/CODEX-RESEARCH.md` |
+| Claude Code | ✅ 已支持 | `server.ts`（MCP Channel，Plugin 全集成） |
+| Codex (OpenAI) | ⚗️ 实验性支持 | `server-codex.ts`（standalone 桥接），Plugin 仅用于 configure/access，TUI 不显示对话，详见 `docs/CODEX-RESEARCH.md` |
 
 ### 架构
 
@@ -39,17 +39,26 @@
 ```
 cc-weixin/
 ├── .claude-plugin/
-│   └── marketplace.json          # 市场索引（根目录）
+│   └── marketplace.json          # Claude Code 市场索引（根目录）
+├── .agents/
+│   └── plugins/
+│       └── marketplace.json      # Codex 市场索引（根目录）
 ├── plugins/
 │   └── weixin/                   # 插件代码（子目录）
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # 插件元数据
+│       │   └── plugin.json       # Claude Code 插件元数据
+│       ├── .codex-plugin/
+│       │   └── plugin.json       # Codex 插件元数据
 │       ├── .claude/
 │       │   └── skills/           # 项目级 skills
 │       │       ├── weixin-configure/SKILL.md
 │       │       └── weixin-access/SKILL.md
-│       ├── .mcp.json             # MCP 服务器启动配置
+│       ├── .mcp.json             # MCP 服务器启动配置（Claude Code）
 │       ├── server.ts             # MCP Server 主入口（Claude Code 适配层）
+│       ├── server-codex.ts       # MCP Server（Codex 适配层，混合 WebSocket 桥接）
+│       ├── skills/               # Skills（Claude Code 和 Codex 共用）
+│       │   ├── configure/SKILL.md
+│       │   └── access/SKILL.md
 │       ├── src/
 │       │   ├── types.ts          # 微信协议类型定义
 │       │   ├── api.ts            # HTTP API 封装
@@ -59,7 +68,8 @@ cc-weixin/
 │       │   ├── send.ts           # 发送文本/图片/视频/文件
 │       │   ├── media.ts          # CDN 上传下载 + AES 加解密
 │       │   ├── accounts.ts       # 凭证存储
-│       │   └── pairing.ts        # 配对码 + allowlist（磁盘持久化）
+│       │   ├── pairing.ts        # 配对码 + allowlist（磁盘持久化）
+│       │   └── codex-client.ts   # Codex App Server WebSocket 客户端
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── ACCESS.md             # 访问控制文档
@@ -80,8 +90,7 @@ cc-weixin/
 | 微信通信层 | `types.ts`, `api.ts`, `login.ts`, `media.ts`, `send.ts`, `accounts.ts`, `pairing.ts` | 微信 API 交互、CDN 媒体处理、凭证管理 | 通用 |
 | 消息轮询层 | `monitor.ts` | 长轮询 + 消息解析 + 访问控制，通过 `onMessage` 回调输出 | 通用 |
 | 平台适配层 | `server.ts` | MCP Server，将回调转为 `notifications/claude/channel` | Claude Code 专用 |
-
-未来支持其他平台只需新写 `server-xxx.ts`，提供对应的 `onMessage` 回调。
+| 平台适配层 | `server-codex.ts` | Standalone 桥接：轮询微信 → 注入 Codex App Server turn → 回复。Plugin 模式下自动降级为 passive（只提供工具） | Codex 专用（实验性） |
 
 ---
 
@@ -117,22 +126,24 @@ cc-weixin/
 
 ## 用户使用流程
 
+### Claude Code
+
 ```bash
 # 1. 添加市场并安装插件
 /plugin marketplace add qufei1993/cc-weixin
 /plugin install weixin@cc-weixin
 
 # 2. 扫码连接微信
-/weixin-configure
+/weixin:configure
 
 # 3. 启动 Claude Code，启用 channel
 claude --channels plugin:weixin@cc-weixin
 
 # 4. 微信发消息 → 收到 6 位配对码 → 确认配对
-/weixin-access pair 123456
+/weixin:access pair 123456
 
 # 5. 锁定白名单（推荐）
-/weixin-access policy allowlist
+/weixin:access policy allowlist
 ```
 
 开发模式：
@@ -140,6 +151,34 @@ claude --channels plugin:weixin@cc-weixin
 cd plugins/weixin
 claude --dangerously-load-development-channels server:weixin
 ```
+
+### Codex（实验性）
+
+> Codex 目前仅支持本地路径安装插件，需先 clone 仓库并手动配置 `~/.agents/plugins/marketplace.json`。
+
+```bash
+# 1. Clone 仓库并配置本地 marketplace（只需一次）
+git clone https://github.com/qufei1993/cc-weixin.git ~/cc-weixin
+# 编辑 ~/.agents/plugins/marketplace.json，path 指向 ~/cc-weixin/plugins/weixin
+
+# 2. 在 Codex 中安装插件（只需一次）
+/plugins  # 搜索 weixin，安装
+
+# 3. 扫码登录微信（在 Codex TUI 中，只需一次）
+$weixin-configure
+
+# 4. 启动桥接服务（长期运行，日志实时可见）
+~/cc-weixin/plugins/weixin/start-codex.sh
+
+# 5. 从微信发消息，在 Codex TUI 中确认配对码
+$weixin-access pair 123456
+
+# 6. 锁定白名单（推荐）
+$weixin-access policy allowlist
+```
+
+> Plugin 仅提供 configure/access 命令入口，运行时桥接由 `start-codex.sh` 负责。
+> TUI 不显示微信对话，AI 回复直接发回微信（[Issue #15320](https://github.com/openai/codex/issues/15320)）。
 
 ---
 

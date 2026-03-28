@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "weixin": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["/Users/may/Desktop/ai/claude/cc-weixin/plugins/weixin/server-codex.ts"],
+      "env": {
+        "CODEX_WS_URL": "ws://127.0.0.1:4500"
+      }
+    }
+  }
+}

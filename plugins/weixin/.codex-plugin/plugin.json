@@ -1,0 +1,25 @@
+{
+  "name": "weixin",
+  "version": "0.1.2",
+  "description": "Weixin (微信) bridge for Codex — connect Weixin to Codex via official iLink Bot API",
+  "author": {
+    "name": "qufei1993",
+    "url": "https://github.com/qufei1993"
+  },
+  "homepage": "https://github.com/qufei1993/cc-weixin",
+  "repository": "https://github.com/qufei1993/cc-weixin",
+  "license": "MIT",
+  "keywords": ["weixin", "wechat", "messaging", "codex", "bridge", "ilink-bot"],
+  "skills": "./skills/",
+  "mcpServers": "./.codex-mcp.json",
+  "interface": {
+    "displayName": "Weixin",
+    "shortDescription": "Bridge Weixin messages to Codex via iLink Bot API",
+    "longDescription": "Connect Weixin to Codex via the official iLink Bot API. Receive Weixin messages as Codex turns and reply automatically. Supports text, images, files, and voice messages.",
+    "developerName": "qufei1993",
+    "category": "Messaging",
+    "capabilities": ["Interactive"],
+    "websiteURL": "https://github.com/qufei1993/cc-weixin",
+    "defaultPrompt": ["Help me respond to Weixin messages"]
+  }
+}

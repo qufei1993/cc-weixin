@@ -1,0 +1,17 @@
+{
+  "name": "cc-weixin",
+  "owner": {
+    "name": "qufei1993"
+  },
+  "metadata": {
+    "description": "WeChat bridge plugin for Codex via official iLink Bot API"
+  },
+  "plugins": [
+    {
+      "name": "weixin",
+      "description": "WeChat (微信) bridge for Codex — connect WeChat to Codex via official iLink Bot API",
+      "source": "./plugins/weixin",
+      "category": "messaging"
+    }
+  ]
+}

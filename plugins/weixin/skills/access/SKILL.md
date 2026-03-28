@@ -7,7 +7,7 @@ argument-hint: "<pair CODE | allow USER | remove USER | policy MODE | status>"
 
 # WeChat Access Control
 
-Manage who can send messages to your Claude Code instance via WeChat.
+Manage who can send messages to your AI coding assistant via WeChat.
 
 ## Instructions
 

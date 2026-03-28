@@ -25,9 +25,16 @@ cd "${CLAUDE_PLUGIN_ROOT:-$(dirname $(dirname $0))}" && bun install --no-summary
 
 The script handles everything: checking existing accounts, displaying the QR code, polling for scan result, and saving credentials.
 
-After connecting, tell the user to restart Claude Code with:
+After connecting, tell the user the next step based on their platform:
+
+**Claude Code:**
 ```
 claude --dangerously-load-development-channels plugin:weixin@cc-weixin
 ```
+Do NOT mention `claude --channels plugin:weixin@cc-weixin` (without `--dangerously-load-development-channels`) — this requires an official allowlist and is not yet available.
 
-**Do NOT mention** `claude --channels plugin:weixin@cc-weixin` (without `--dangerously-load-development-channels`) — this requires an official allowlist and is not yet available.
+**Codex:**
+```
+codex app-server --listen ws://127.0.0.1:4500
+```
+Note: Codex TUI will not display WeChat conversations directly. Messages are processed in the background. Use `check_messages` to view recent messages.

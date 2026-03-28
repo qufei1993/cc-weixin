@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-WeChat channel plugin for Claude Code, connecting WeChat via the official iLink Bot API.
+WeChat channel plugin for Claude Code and Codex, connecting WeChat via the official iLink Bot API.
 Monorepo structure — the plugin source lives under `plugins/weixin/`.
 
 ## Code Style
@@ -42,25 +42,28 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 plugins/weixin/
-├── server.ts        # MCP Server entry (platform adapter layer)
+├── server.ts          # MCP Server entry (Claude Code adapter)
+├── server-codex.ts    # MCP Server + WebSocket bridge (Codex adapter, experimental)
 ├── src/
-│   ├── types.ts     # iLink Bot API type definitions
-│   ├── api.ts       # HTTP API wrapper
-│   ├── accounts.ts  # Credential storage (~/.claude/channels/weixin/)
-│   ├── login.ts     # QR code login flow
-│   ├── monitor.ts   # Long-poll message receiver (platform-agnostic)
-│   ├── send.ts      # Message sending + markdown-to-plaintext
-│   ├── media.ts     # CDN upload/download with AES-128-ECB encryption
-│   ├── pairing.ts   # Pairing code + allowlist access control
-│   └── cli-login.ts # Standalone login script
-├── skills/          # Claude Code skill definitions
-└── .claude-plugin/  # Plugin metadata
+│   ├── types.ts       # iLink Bot API type definitions
+│   ├── api.ts         # HTTP API wrapper
+│   ├── accounts.ts    # Credential storage (~/.claude/channels/weixin/)
+│   ├── login.ts       # QR code login flow
+│   ├── monitor.ts     # Long-poll message receiver (platform-agnostic)
+│   ├── send.ts        # Message sending + markdown-to-plaintext
+│   ├── media.ts       # CDN upload/download with AES-128-ECB encryption
+│   ├── pairing.ts     # Pairing code + allowlist access control
+│   ├── codex-client.ts # Codex App Server WebSocket client
+│   └── cli-login.ts   # Standalone login script
+├── skills/            # Skill definitions (shared by Claude Code and Codex)
+├── .claude-plugin/    # Claude Code plugin metadata
+└── .codex-plugin/     # Codex plugin metadata
 ```
 
 ## Architecture Decisions
 
 - **Two-layer design**: `src/` is platform-agnostic WeChat communication;
-  `server.ts` is the Claude Code adapter. Keep them separated.
+  `server.ts` is the Claude Code adapter; `server-codex.ts` is the Codex adapter. Keep them separated.
 - **No reverse engineering**: Only use the official iLink Bot API.
 - **Credentials**: Always `chmod 0600` for account files.
   State dir: `~/.claude/channels/weixin/` (overridable via `WEIXIN_STATE_DIR`).
@@ -72,16 +75,16 @@ plugins/weixin/
 - `qrcode-terminal` has no types — use `src/qrcode-terminal.d.ts`
 - `fetch` body requires `Uint8Array` not `Buffer` for TypeScript compatibility
 - Long-poll timeout in `getUpdates` is expected — handle `AbortError` gracefully
-- Version numbers must stay in sync across 4 files:
-  `package.json`, `server.ts`, `.claude-plugin/plugin.json`, and
-  root `.claude-plugin/marketplace.json`
+- Version numbers must stay in sync across 5 files:
+  `package.json`, `server.ts`, `server-codex.ts`, `.claude-plugin/plugin.json`,
+  `.codex-plugin/plugin.json`, and root `.claude-plugin/marketplace.json`
 - Test files use `WEIXIN_STATE_DIR` env var to isolate from real credentials
 
 ## Security Rules
 
 - Never log or expose tokens, aes_keys, or account credentials
 - Never commit `.env`, `account.json`, or any credential files
-- Validate all user input at MCP tool boundaries (`server.ts`)
+- Validate all user input at MCP tool boundaries (`server.ts`, `server-codex.ts`)
 
 ## References
 

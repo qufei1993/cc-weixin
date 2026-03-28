@@ -10,5 +10,5 @@
     "declaration": true,
     "types": ["bun-types"]
   },
-  "include": ["server.ts", "codex-bridge.ts", "src/**/*.ts"]
+  "include": ["server.ts", "server-codex.ts", "src/**/*.ts"]
 }
