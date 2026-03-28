@@ -2,6 +2,30 @@
 
 本项目遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范。
 
+## [0.2.0] - 2026-03-28
+
+### 新增
+
+- **Codex 实验性支持**：新增 `server-codex.ts`，以 standalone 桥接模式连接微信与 Codex App Server。微信消息自动注入为 turn，AI 回复自动发回微信，终端实时显示收发内容
+- **一键启动脚本**：新增 `start-codex.sh`，同时启动 Codex App Server 和微信桥接进程，`Ctrl+C` 统一停止
+- **Codex Plugin 支持**：新增 `.codex-plugin/plugin.json`，提供 `weixin-configure`（扫码登录）和 `weixin-access`（访问控制）两个 skill
+- **单实例锁**：`server-codex.ts` 通过锁文件确保同一时刻只有一个实例运行 poll loop，防止多进程重复回复
+- **独立安装指南**：文档拆分为 `docs/INSTALL-CLAUDE.md`（Claude Code）和 `docs/INSTALL-CODEX.md`（Codex），各自流程独立清晰
+
+### 变更
+
+- **文档重构**：README 精简为概览，安装使用细节移至独立指南文档
+- **Skills 合并**：`skills/configure` 和 `skills/access` 更新为同时覆盖 Claude Code 和 Codex 两个平台
+- **删除 `codex-bridge.ts`**：逻辑已并入 `server-codex.ts`
+
+### 已知限制（Codex）
+
+- Codex TUI 不显示外部注入的对话（跟踪：[openai/codex#15320](https://github.com/openai/codex/issues/15320)）
+- Codex 插件市场暂不支持远程安装社区插件，需手动 clone 仓库
+- 单用户路由，多用户并发可能串消息
+
+待上述 Codex 官方 Issue 解决后，本项目将同步更新。
+
 ## [0.1.2] - 2026-03-24
 
 ### 修复

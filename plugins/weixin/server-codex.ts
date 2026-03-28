@@ -32,7 +32,7 @@ import { TypingStatus } from "./src/types.js";
 import { CodexClient, type CodexEvent } from "./src/codex-client.js";
 
 const CODEX_WS_URL = process.env.CODEX_WS_URL || "ws://127.0.0.1:4500";
-const VERSION = "0.1.2";
+const VERSION = "0.2.0";
 
 // --- Single-instance lock ---
 
