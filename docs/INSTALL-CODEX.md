@@ -2,6 +2,20 @@
 
 > **实验性支持**：Codex 集成存在已知平台限制，体验与 Claude Code 版本不同，请阅读下方说明再决定是否使用。
 
+## 与 Claude Code 的能力差距
+
+当前 Codex 版本缺少若干平台能力，导致微信集成体验不及 Claude Code。我们持续跟踪以下 Codex 官方 Issue，一旦这些问题得到解决，本项目会同步更新以提供对等体验：
+
+| 能力 | Claude Code | Codex 现状 | 跟踪 Issue |
+|------|-------------|------------|------------|
+| 终端显示微信对话 | ✅ 消息直接出现在会话中 | ❌ TUI 不渲染外部注入的 turn | [#15320](https://github.com/openai/codex/issues/15320) |
+| MCP 通知推送到会话 | ✅ `notifications/claude/channel` | ❌ 无等效机制 | [#15299](https://github.com/openai/codex/issues/15299) |
+| 社区插件远程安装 | ✅ marketplace URL 一键安装 | ❌ 仅支持本地路径 | 官方社区市场尚未开放 |
+| MCP Resource Subscribe | ✅ | ❌ 未实现 | [#4956](https://github.com/openai/codex/issues/4956) |
+| MCP Sampling | ✅ | ❌ 未实现 | [#4929](https://github.com/openai/codex/issues/4929) |
+
+**最关键的两个**：#15320（TUI 显示对话）和 #15299（MCP 通知路由），任意一个解决后，用户即可在 Codex 终端中直接看到微信对话，体验将与 Claude Code 基本一致。
+
 ## 已知限制
 
 | 限制 | 说明 |
