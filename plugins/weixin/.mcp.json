@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "weixin": {
-      "command": "bun",
-      "args": ["run", "--cwd", "${CLAUDE_PLUGIN_ROOT}", "--shell=bun", "--silent", "start"]
+      "command": "/bin/sh",
+      "args": ["-c", "PATH=\"$HOME/.bun/bin:$HOME/.volta/bin:$PATH\" bun run --cwd \"${CLAUDE_PLUGIN_ROOT}\" --shell=bun --silent start"]
     }
   }
 }
