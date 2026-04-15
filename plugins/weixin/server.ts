@@ -13,11 +13,65 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { existsSync } from "node:fs";
 
-import { loadAccount, DEFAULT_BASE_URL, CDN_BASE_URL } from "./src/accounts.js";
+import { loadAccount, DEFAULT_BASE_URL, CDN_BASE_URL, loadAnthropicCredentials } from "./src/accounts.js";
 import { startPollLoop, getContextToken, type ParsedMessage } from "./src/monitor.js";
 import { sendText, sendMediaFile } from "./src/send.js";
 import { getConfig, sendTyping } from "./src/api.js";
 import { TypingStatus } from "./src/types.js";
+
+/** Call MiniMax API to generate a response */
+async function generateAIResponse(userMessage: string, chatId: string): Promise<string | null> {
+  const creds = loadAnthropicCredentials();
+  if (!creds) {
+    process.stderr.write("[weixin] No Anthropic credentials found in settings.json, skipping auto-reply\n");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${creds.baseUrl}/v1/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": creds.token,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: creds.model,
+        max_tokens: 1024,
+        messages: [
+          {
+            role: "user",
+            content: userMessage,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      process.stderr.write(`[weixin] MiniMax API error: ${response.status} ${errorText}\n`);
+      return null;
+    }
+
+    const data = await response.json();
+    // MiniMax response format: content is an array with objects having type: "text" or "thinking"
+    const content = (data as any)?.content;
+    if (Array.isArray(content)) {
+      const textItem = content.find((item: any) => item.type === "text");
+      if (textItem?.text) {
+        return textItem.text;
+      }
+      const thinkingItem = content.find((item: any) => item.type === "thinking");
+      if (thinkingItem?.thinking) {
+        return thinkingItem.thinking;
+      }
+    }
+    return "收到消息";
+  } catch (err) {
+    process.stderr.write(`[weixin] Failed to call MiniMax API: ${err}\n`);
+    return null;
+  }
+}
 
 const server = new Server(
   { name: "weixin", version: "0.2.0" },
@@ -220,6 +274,7 @@ async function main() {
     cdnBaseUrl,
     token: account.token,
     onMessage: async (msg: ParsedMessage) => {
+      // Send notification to Claude Code (for cases where Claude Code processes it)
       await server.notification({
         method: "notifications/claude/channel",
         params: {
@@ -233,6 +288,20 @@ async function main() {
           },
         },
       });
+
+      // Auto-reply via MiniMax API if ANTHROPIC_AUTH_TOKEN is set
+      const contextToken = getContextToken(msg.fromUserId) || "";
+      const aiResponse = await generateAIResponse(msg.text, msg.fromUserId);
+      if (aiResponse) {
+        await sendText({
+          to: msg.fromUserId,
+          text: aiResponse,
+          baseUrl,
+          token: account.token,
+          contextToken,
+        });
+        process.stderr.write(`[weixin] Auto-replied to ${msg.fromUserId}: ${aiResponse.substring(0, 50)}...\n`);
+      }
     },
     abortSignal: controller.signal,
   });

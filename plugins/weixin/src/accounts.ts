@@ -51,3 +51,19 @@ export function clearAccount(): void {
     unlinkSync(p);
   }
 }
+
+/** Load Anthropic API credentials from ~/.claude/settings.json */
+export function loadAnthropicCredentials(): { token: string; baseUrl: string; model: string } | null {
+  const settingsPath = join(homedir(), ".claude", "settings.json");
+  if (!existsSync(settingsPath)) return null;
+  try {
+    const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+    const token = settings.env?.ANTHROPIC_AUTH_TOKEN;
+    const baseUrl = settings.env?.ANTHROPIC_BASE_URL || "https://api.minimaxi.com/anthropic";
+    const model = settings.env?.ANTHROPIC_MODEL || "MiniMax-M2.7";
+    if (!token) return null;
+    return { token, baseUrl, model };
+  } catch {
+    return null;
+  }
+}
