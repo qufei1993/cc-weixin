@@ -2,6 +2,12 @@
 
 本项目遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范。
 
+## [0.2.1] - 2026-04-16
+
+### 修复
+
+- **MCP 启动**：在启动 MCP server 前补充 macOS 常见 Bun/Volta 安装路径，修复 Claude Code 未加载 shell profile 时可能找不到 `bun` 的问题 ([#14](https://github.com/qufei1993/cc-weixin/pull/14))
+
 ## [0.2.0] - 2026-03-28
 
 ### 新增

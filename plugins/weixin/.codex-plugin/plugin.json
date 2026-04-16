@@ -1,6 +1,6 @@
 {
   "name": "weixin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Weixin (微信) bridge for Codex — connect Weixin to Codex via official iLink Bot API",
   "author": {
     "name": "qufei1993",

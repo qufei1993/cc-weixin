@@ -154,7 +154,7 @@ export class CodexClient {
   /** Send JSON-RPC initialize handshake */
   async initialize(): Promise<Record<string, unknown>> {
     return this.request("initialize", {
-      clientInfo: { name: "weixin-bridge", version: "0.1.0" },
+      clientInfo: { name: "weixin-bridge", version: "0.2.1" },
     });
   }
 

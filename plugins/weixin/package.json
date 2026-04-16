@@ -1,6 +1,6 @@
 {
   "name": "cc-weixin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "WeChat channel plugin for Claude Code and Codex via official iLink Bot API",
   "license": "MIT",
   "type": "module",
