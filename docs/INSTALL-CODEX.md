@@ -89,6 +89,7 @@ $weixin-configure
 ```
 
 这会同时启动 Codex App Server 和微信桥接进程，日志实时显示在终端。按 `Ctrl+C` 停止。
+脚本会自动补充 Bun 常见安装路径（`~/.bun/bin`、`~/.volta/bin`），因此不要求从登录 shell 启动。
 
 ```
 [weixin] Starting Codex App Server at ws://127.0.0.1:4500...
@@ -134,6 +135,21 @@ $weixin-access policy allowlist
 2. 从微信发消息，AI 自动处理并回复
 
 无需打开 Codex TUI（TUI 也看不到对话内容）。
+
+## 故障排查
+
+### `MCP startup failed: connection closed: initialize response`
+
+这通常表示 Codex 在启动插件 MCP 子进程时，子进程还没完成 `initialize` 就退出了。常见原因是 Codex App 的启动环境不是登录 shell，继承的 `PATH` 里没有 `bun`，或启动目录不是插件根目录。
+
+当前插件的 `.codex-mcp.json` 会显式设置插件工作目录，并在启动命令中补充 Bun 常见安装路径。如果仍然出现该错误，先确认：
+
+```bash
+bun --version
+codex mcp list
+```
+
+`codex mcp list` 中 `weixin` 应该显示为 enabled，并能看到 `CODEX_WS_URL` 环境变量。扫码登录状态不会导致 `initialize response` 握手关闭；未登录只会在工具调用或桥接运行时提示重新配置。
 
 ## 卸载
 

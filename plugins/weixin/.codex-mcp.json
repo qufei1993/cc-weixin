@@ -3,9 +3,10 @@
     "weixin": {
       "type": "stdio",
       "command": "sh",
+      "cwd": ".",
       "args": [
         "-c",
-        "bun install --no-summary --cwd \"${CODEX_PLUGIN_ROOT:-.}\" 1>&2 && exec bun --cwd \"${CODEX_PLUGIN_ROOT:-.}\" server-codex.ts"
+        "export PATH=\"$HOME/.bun/bin:$HOME/.volta/bin:$PATH\"; PLUGIN_ROOT=\"${CODEX_PLUGIN_ROOT:-$PWD}\"; bun install --no-summary --frozen-lockfile --cwd \"$PLUGIN_ROOT\" 1>&2 && exec bun --cwd \"$PLUGIN_ROOT\" server-codex.ts"
       ],
       "env": {
         "CODEX_WS_URL": "ws://127.0.0.1:4500"
